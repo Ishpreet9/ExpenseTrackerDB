@@ -1,0 +1,185 @@
+
+This example demonstrates how all 7 tables connect and update over 
+
+a few days for a single user, Rahul.
+
+
+
+--------------------------------------------------------------------
+
+STEP 1: SETUP THE PARENT TABLES
+
+--------------------------------------------------------------------
+
+Before Rahul can log any money, the lookup tables and his user 
+
+profile must exist (because of the FOREIGN KEY rules).
+
+
+
+[Users]
+
+user_id | full_name    | email           | created_at
+
+--------|--------------|-----------------|-----------
+
+1       | Rahul Sharma | rahul@email.com | 01-NOV-26
+
+
+
+[Income_Types]
+
+type_id | type_name
+
+--------|----------
+
+1       | Salary
+
+2       | Freelance
+
+
+
+[Categories]
+
+category_id | category_name
+
+------------|--------------
+
+1           | Food
+
+2           | Rent
+
+
+
+
+
+--------------------------------------------------------------------
+
+STEP 2: RAHUL GETS PAID (Income -> Savings goes UP)
+
+--------------------------------------------------------------------
+
+On Nov 1, Rahul receives his Rs. 50,000 salary. A row is inserted 
+
+into Incomes linking user_id = 1 (Rahul) and type_id = 1 (Salary).
+
+
+
+[Incomes]
+
+income_id | user_id | type_id | title           | amount | income_date
+
+----------|---------|---------|-----------------|--------|------------
+
+101       | 1       | 1       | November Salary | 50000  | 01-NOV-26
+
+
+
+Because of this income, Savings_History logs the change and sets 
+
+his running balance to Rs. 50,000:
+
+
+
+[Savings_History]
+
+history_id | user_id | change_type | change_amount | current_savings | updated_at
+
+-----------|---------|-------------|---------------|-----------------|-----------
+
+1          | 1       | INCOME      | +50000        | 50000           | 01-NOV-26
+
+
+
+
+
+--------------------------------------------------------------------
+
+STEP 3: RAHUL BUYS GROCERIES (Expense -> Savings goes DOWN)
+
+--------------------------------------------------------------------
+
+On Nov 3, Rahul spends Rs. 2,000 on groceries. A row is inserted 
+
+into Expenses linking user_id = 1 (Rahul) and category_id = 1 (Food).
+
+
+
+[Expenses]
+
+expense_id | user_id | category_id | title            | amount | expense_date
+
+-----------|---------|-------------|------------------|--------|-------------
+
+201        | 1       | 1           | Weekly Groceries | 2000   | 03-NOV-26
+
+
+
+Savings_History subtracts Rs. 2,000 from his previous balance 
+
+(50,000 - 2,000):
+
+
+
+[Savings_History] (new row added)
+
+history_id | user_id | change_type | change_amount | current_savings | updated_at
+
+-----------|---------|-------------|---------------|-----------------|-----------
+
+1          | 1       | INCOME      | +50000        | 50000           | 01-NOV-26
+
+2          | 1       | EXPENSE     | -2000         | 48000           | 03-NOV-26
+
+
+
+
+
+--------------------------------------------------------------------
+
+STEP 4: RAHUL SCHEDULES A RECURRING BILL (Rent)
+
+--------------------------------------------------------------------
+
+Rahul pays Rs. 10,000 rent every month on the 5th. He saves it once 
+
+in Recurring_Bills (is_active = 1 means it is turned ON).
+
+
+
+[Recurring_Bills]
+
+bill_id | user_id | category_id | title      | amount | frequency | next_due_date | is_active
+
+--------|---------|-------------|------------|--------|-----------|---------------|----------
+
+301     | 1       | 2           | House Rent | 10000  | MONTHLY   | 05-NOV-26     | 1
+
+
+
+What happens on Nov 5 when the bill is due:
+
+1. A new row is added to Expenses:
+
+   (expense_id = 202, title = 'House Rent', amount = 10000)
+
+2. Savings_History adds a 3rd row:
+
+   (change_type = 'RECURRING_BILL', change_amount = -10000, current_savings = 38000)
+
+3. In Recurring_Bills, next_due_date updates to '05-DEC-26' so it is 
+
+   ready for next month.
+
+
+--------------------------------------------------------------------
+
+"Users, Income_Types, and Categories are our parent tables. Whenever 
+
+a user logs an Income or Expense, it links to those IDs and 
+
+automatically updates their running balance in Savings_History. 
+
+Recurring_Bills stores repeating payments like rent, which feed into 
+
+Expenses whenever their due date arrives."
