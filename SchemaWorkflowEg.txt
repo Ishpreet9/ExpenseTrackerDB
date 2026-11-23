@@ -75,9 +75,9 @@ income_id (PK) | user_id (FK) | type_id (FK) | title           | amount | income
 
 
 
-Because of this income, Savings_History logs the change and sets 
+Because of this income, Savings_History logs the change with the help of
 
-his running balance to Rs. 50,000:
+trg_income_savings trigger and sets his running balance to Rs. 50,000:
 
 
 
@@ -117,7 +117,7 @@ expense_id (PK) | user_id (FK) | category_id (FK) | title            | amount | 
 
 Savings_History subtracts Rs. 2,000 from his previous balance 
 
-(50,000 - 2,000):
+(50,000 - 2,000) and logs the new change in income using trg_expense_savings trigger
 
 
 
