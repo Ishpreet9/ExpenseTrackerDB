@@ -19,35 +19,35 @@ profile must exist (because of the FOREIGN KEY rules).
 
 [Users]
 
-user_id | full_name    | email           | created_at
+user_id (PK) | full_name    | email (UNIQUE)           | created_at
 
---------|--------------|-----------------|-----------
+-------------|--------------|--------------------------|-----------
 
-1       | Rahul Sharma | rahul@email.com | 01-NOV-26
+1            | Rahul Sharma | rahul@email.com          | 01-NOV-26
 
 
 
 [Income_Types]
 
-type_id | type_name
+type_id (PK) | type_name (UNIQUE)
 
---------|----------
+-------------|----------
 
-1       | Salary
+1            | Salary
 
-2       | Freelance
+2            | Freelance
 
 
 
 [Categories]
 
-category_id | category_name
+category_id (PK) | category_name (UNIQUE)
 
-------------|--------------
+-----------------|--------------
 
-1           | Food
+1                | Food
 
-2           | Rent
+2                | Rent
 
 
 
@@ -67,11 +67,11 @@ into Incomes linking user_id = 1 (Rahul) and type_id = 1 (Salary).
 
 [Incomes]
 
-income_id | user_id | type_id | title           | amount | income_date
+income_id (PK) | user_id (FK) | type_id (FK) | title           | amount | income_date
 
-----------|---------|---------|-----------------|--------|------------
+---------------|--------------|--------------|-----------------|--------|------------
 
-101       | 1       | 1       | November Salary | 50000  | 01-NOV-26
+101            | 1            | 1            | November Salary | 50000  | 01-NOV-26
 
 
 
@@ -83,11 +83,11 @@ his running balance to Rs. 50,000:
 
 [Savings_History]
 
-history_id | user_id | change_type | change_amount | current_savings | updated_at
+history_id (PK) | user_id (FK) | change_type | change_amount | current_savings | updated_at
 
------------|---------|-------------|---------------|-----------------|-----------
+----------------|--------------|-------------|---------------|-----------------|-----------
 
-1          | 1       | INCOME      | +50000        | 50000           | 01-NOV-26
+1               | 1            | INCOME      | +50000        | 50000           | 01-NOV-26
 
 
 
@@ -107,11 +107,11 @@ into Expenses linking user_id = 1 (Rahul) and category_id = 1 (Food).
 
 [Expenses]
 
-expense_id | user_id | category_id | title            | amount | expense_date
+expense_id (PK) | user_id (FK) | category_id (FK) | title            | amount | expense_date
 
------------|---------|-------------|------------------|--------|-------------
+----------------|--------------|------------------|------------------|--------|-------------
 
-201        | 1       | 1           | Weekly Groceries | 2000   | 03-NOV-26
+201             |      1       | 1                | Weekly Groceries | 2000   | 03-NOV-26
 
 
 
@@ -123,13 +123,13 @@ Savings_History subtracts Rs. 2,000 from his previous balance
 
 [Savings_History] (new row added)
 
-history_id | user_id | change_type | change_amount | current_savings | updated_at
+history_id (PK) | user_id (FK) | change_type | change_amount | current_savings | updated_at
 
------------|---------|-------------|---------------|-----------------|-----------
+----------------|--------------|-------------|---------------|-----------------|-----------
 
-1          | 1       | INCOME      | +50000        | 50000           | 01-NOV-26
+1               | 1            | INCOME      | +50000        | 50000           | 01-NOV-26
 
-2          | 1       | EXPENSE     | -2000         | 48000           | 03-NOV-26
+2               | 1            | EXPENSE     | -2000         | 48000           | 03-NOV-26
 
 
 
@@ -149,11 +149,11 @@ in Recurring_Bills (is_active = 1 means it is turned ON).
 
 [Recurring_Bills]
 
-bill_id | user_id | category_id | title      | amount | frequency | next_due_date | is_active
+bill_id (PK) | user_id (FK) | category_id (FK) | title      | amount | frequency | next_due_date | is_active
 
---------|---------|-------------|------------|--------|-----------|---------------|----------
+-------------|--------------|------------------|------------|--------|-----------|---------------|----------
 
-301     | 1       | 2           | House Rent | 10000  | MONTHLY   | 05-NOV-26     | 1
+301          | 1            | 2                | House Rent | 10000  | MONTHLY   | 05-NOV-26     | 1
 
 
 
