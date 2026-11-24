@@ -1,9 +1,0 @@
-This is a list of all minor things that are to be changed before final submission
-
-* Add description column to Incomes table example in SchemaWorkflow.txt
-* Add description column to Expense table example in SchemaWorkflow.txt
-* Change the ID examples so that they match the ID possible according to the tables
-* Add check constraint to the change type in Savings_History
-* Add a way so that we can track which insert command added the information in the Savings_History
-* Add a way so that overspending can be checked
-* Add a way so that there is a last day at which the Recurring_Bills will be stop automatically
