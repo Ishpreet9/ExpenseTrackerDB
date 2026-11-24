@@ -333,9 +333,7 @@ DELIMITER ;
 
 CALL GetExpensesByDate(1, '2026-11-01', '2026-11-30');
 
--- 10. Transactions
-
-
+-- 10. Transactions
 
 -- 10.1 COMMIT example
 START TRANSACTION; 
@@ -354,3 +352,304 @@ SAVEPOINT before_second_insert;
 INSERT INTO Expenses (user_id, category_id, title, amount) VALUES (1, 2, 'Expense Two', 700); 
 ROLLBACK TO SAVEPOINT before_second_insert; 
 COMMIT;
+
+-- 11. DISTINCT queries
+
+-- 11.1 Display unique user IDs from expenses
+SELECT DISTINCT user_id FROM Expenses;
+
+-- 11.2 Display unique expense category IDs
+SELECT DISTINCT category_id FROM Expenses;
+
+-- 11.3 Display unique income type IDs
+SELECT DISTINCT type_id FROM Incomes;
+
+-- 11.4 Display unique bill frequencies
+SELECT DISTINCT frequency FROM Recurring_Bills;
+
+
+-- 12. String functions
+
+-- 12.1 Display user names in uppercase
+SELECT UPPER(full_name) AS uppercase_name FROM Users;
+
+-- 12.2 Display user names in lowercase
+SELECT LOWER(full_name) AS lowercase_name FROM Users;
+
+-- 12.3 Display the length of each user's name
+SELECT full_name, LENGTH(full_name) AS name_length FROM Users;
+
+-- 12.4 Combine user's name and email
+SELECT CONCAT(full_name, ' - ', email) AS user_details FROM Users;
+
+-- 12.5 Extract the first three characters of user names
+SELECT SUBSTRING(full_name, 1, 3) AS short_name FROM Users;
+
+-- 12.6 Remove extra spaces from names
+SELECT TRIM(full_name) AS cleaned_name FROM Users;
+
+-- 12.7 Display the first two characters of each name
+SELECT LEFT(full_name, 2) AS first_two_characters FROM Users;
+
+-- 12.8 Display the last two characters of each name
+SELECT RIGHT(full_name, 2) AS last_two_characters FROM Users;
+
+-- 12.9 Replace a word in a string
+SELECT REPLACE(full_name, 'Rahul', 'Rohit') AS modified_name FROM Users;
+
+
+-- 13. Numeric functions
+
+-- 13.1 Round expense amounts to two decimal places
+SELECT ROUND(amount, 2) AS rounded_amount FROM Expenses;
+
+-- 13.2 Display absolute values of expense amounts
+SELECT ABS(amount) AS absolute_amount FROM Expenses;
+
+-- 13.3 Round expense amounts upward
+SELECT CEILING(amount) AS rounded_up_amount FROM Expenses;
+
+-- 13.4 Round expense amounts downward
+SELECT FLOOR(amount) AS rounded_down_amount FROM Expenses;
+
+-- 13.5 Find the remainder of expense amounts divided by 2
+SELECT amount, MOD(amount, 2) AS remainder FROM Expenses;
+
+
+-- 14. NULL handling functions
+
+-- 14.1 Replace NULL values in descriptions with 'No Description'
+SELECT title, IFNULL(description, 'No Description') AS description
+FROM Expenses;
+
+-- 14.2 Replace NULL values using COALESCE
+SELECT title, COALESCE(description, 'Not Available') AS description
+FROM Incomes;
+
+-- 14.3 Return NULL if amount is zero
+SELECT amount, NULLIF(amount, 0) AS result
+FROM Expenses;
+
+
+-- 15. Additional date and time functions
+
+-- 15.1 Display the month name of each expense
+SELECT expense_date, MONTHNAME(expense_date) AS month_name
+FROM Expenses;
+
+-- 15.2 Display the day name of each expense
+SELECT expense_date, DAYNAME(expense_date) AS day_name
+FROM Expenses;
+
+-- 15.3 Display expenses with dates formatted as DD-MM-YYYY
+SELECT title, DATE_FORMAT(expense_date, '%d-%m-%Y') AS formatted_date
+FROM Expenses;
+
+-- 15.4 Calculate the number of days since each expense
+SELECT title, expense_date, DATEDIFF(CURDATE(), expense_date) AS days_since_expense
+FROM Expenses;
+
+-- 15.5 Add 30 days to expense dates
+SELECT expense_date, DATE_ADD(expense_date, INTERVAL 30 DAY) AS future_date
+FROM Expenses;
+
+-- 15.6 Find the last day of the month for each expense
+SELECT expense_date, LAST_DAY(expense_date) AS month_end
+FROM Expenses;
+
+-- 15.7 Display the quarter in which each expense was recorded
+SELECT expense_date, QUARTER(expense_date) AS quarter_number
+FROM Expenses;
+
+
+-- 16. UNION and UNION ALL
+
+-- 16.1 Display user IDs appearing in incomes or expenses without duplicates
+SELECT user_id FROM Incomes
+UNION
+SELECT user_id FROM Expenses;
+
+-- 16.2 Display user IDs from incomes and expenses including duplicates
+SELECT user_id FROM Incomes
+UNION ALL
+SELECT user_id FROM Expenses;
+
+-- 16.3 Combine income and expense titles into a single list
+SELECT title FROM Incomes
+UNION
+SELECT title FROM Expenses;
+
+
+-- 17. ANY and ALL operators
+
+-- 17.1 Find expenses greater than ANY expense recorded by user 1
+SELECT * FROM Expenses
+WHERE amount > ANY (
+    SELECT amount FROM Expenses
+    WHERE user_id = 1
+);
+
+-- 17.2 Find expenses greater than ALL expenses recorded by user 1
+SELECT * FROM Expenses
+WHERE amount > ALL (
+    SELECT amount FROM Expenses
+    WHERE user_id = 1
+);
+
+
+-- 18. CROSS JOIN and SELF JOIN
+
+-- 18.1 Display all possible combinations of users and categories
+SELECT u.full_name, c.category_name
+FROM Users u
+CROSS JOIN Categories c;
+
+-- 18.2 Compare users with other users using SELF JOIN
+SELECT u1.full_name AS user_one, u2.full_name AS user_two
+FROM Users u1
+JOIN Users u2
+ON u1.user_id < u2.user_id;
+
+
+-- 19. Common Table Expressions (CTE)
+
+-- 19.1 Calculate total expenses for each user using a CTE
+WITH UserExpenses AS (
+    SELECT user_id, SUM(amount) AS total_expenses
+    FROM Expenses
+    GROUP BY user_id
+)
+SELECT * FROM UserExpenses;
+
+-- 19.2 Find users whose total expenses exceed 5000 using a CTE
+WITH UserExpenses AS (
+    SELECT user_id, SUM(amount) AS total_expenses
+    FROM Expenses
+    GROUP BY user_id
+)
+SELECT u.full_name, ue.total_expenses
+FROM Users u
+JOIN UserExpenses ue
+ON u.user_id = ue.user_id
+WHERE ue.total_expenses > 5000;
+
+-- 19.3 Calculate total income for each user using a CTE
+WITH UserIncome AS (
+    SELECT user_id, SUM(amount) AS total_income
+    FROM Incomes
+    GROUP BY user_id
+)
+SELECT u.full_name, ui.total_income
+FROM Users u
+JOIN UserIncome ui
+ON u.user_id = ui.user_id;
+
+
+-- 20. ALTER TABLE – Changing table structure
+
+-- 20.1 Add a phone column to Users
+ALTER TABLE Users
+ADD COLUMN phone VARCHAR(15);
+
+-- 20.2 Modify the size of the full_name column
+ALTER TABLE Users
+MODIFY COLUMN full_name VARCHAR(100);
+
+-- 20.3 Rename a column
+ALTER TABLE Users
+RENAME COLUMN full_name TO name;
+
+-- 20.4 Drop the phone column
+ALTER TABLE Users
+DROP COLUMN phone;
+
+
+-- 21. CREATE INDEX – Improving query performance
+
+-- 21.1 Create an index on user_id in Expenses
+CREATE INDEX idx_expenses_user
+ON Expenses(user_id);
+
+-- 21.2 Create an index on expense_date
+CREATE INDEX idx_expenses_date
+ON Expenses(expense_date);
+
+-- 21.3 Create an index on category_id in Expenses
+CREATE INDEX idx_expenses_category
+ON Expenses(category_id);
+
+-- 21.4 Drop an index
+DROP INDEX idx_expenses_category ON Expenses;
+
+
+-- 22. TRIGGER – Automatic validation
+
+-- 22.1 Prevent inserting negative expense amounts
+DELIMITER //
+
+CREATE TRIGGER PreventNegativeExpense
+BEFORE INSERT ON Expenses
+FOR EACH ROW
+BEGIN
+    IF NEW.amount < 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Expense amount cannot be negative';
+    END IF;
+END //
+
+DELIMITER ;
+
+
+-- 23. CREATE FUNCTION – Custom SQL function
+
+-- 23.1 Create a function to calculate a user's financial balance
+DELIMITER //
+
+CREATE FUNCTION CalculateBalance(p_user_id INT)
+RETURNS DECIMAL(10,2)
+DETERMINISTIC
+READS SQL DATA
+BEGIN
+    DECLARE total_income DECIMAL(10,2);
+    DECLARE total_expenses DECIMAL(10,2);
+
+    SELECT COALESCE(SUM(amount), 0)
+    INTO total_income
+    FROM Incomes
+    WHERE user_id = p_user_id;
+
+    SELECT COALESCE(SUM(amount), 0)
+    INTO total_expenses
+    FROM Expenses
+    WHERE user_id = p_user_id;
+
+    RETURN total_income - total_expenses;
+END //
+
+DELIMITER ;
+
+-- 23.2 Call the function to calculate balance
+SELECT CalculateBalance(1) AS balance;
+
+
+-- 24. GRANT and REVOKE – Database permissions
+
+-- 24.1 Grant SELECT permission on Users table
+GRANT SELECT ON finance_db.Users
+TO 'student'@'localhost';
+
+-- 24.2 Grant INSERT permission on Expenses table
+GRANT INSERT ON finance_db.Expenses
+TO 'student'@'localhost';
+
+-- 24.3 Grant UPDATE permission on Users table
+GRANT UPDATE ON finance_db.Users
+TO 'student'@'localhost';
+
+-- 24.4 Revoke SELECT permission from Users table
+REVOKE SELECT ON finance_db.Users
+FROM 'student'@'localhost';
+
+-- 24.5 Revoke INSERT permission from Expenses table
+REVOKE INSERT ON finance_db.Expenses
+FROM 'student'@'localhost';
