@@ -1,6 +1,5 @@
 SQL INSERT script
 
-
 -- ====================================================================
 -- 1. INSERT INTO Users (10 rows)
 -- ====================================================================
@@ -73,26 +72,7 @@ INSERT INTO Expenses (expense_id, user_id, category_id, title, description, amou
 INSERT INTO Expenses (expense_id, user_id, category_id, title, description, amount, expense_date) VALUES (212, 8, 9, 'Vehicle Insurance', 'Annual comprehensive motor policy', 6500.00, TO_DATE('13-NOV-2026', 'DD-MON-YYYY'));
 
 -- ====================================================================
--- 6. INSERT INTO Savings_History (15 rows)
--- ====================================================================
-INSERT INTO Savings_History (history_id, user_id, change_type, change_amount, current_savings, updated_at) VALUES (1, 1, 'INCOME', 45000.00, 45000.00, TO_DATE('01-NOV-2026', 'DD-MON-YYYY'));
-INSERT INTO Savings_History (history_id, user_id, change_type, change_amount, current_savings, updated_at) VALUES (2, 1, 'EXPENSE', -1800.00, 43200.00, TO_DATE('02-NOV-2026', 'DD-MON-YYYY'));
-INSERT INTO Savings_History (history_id, user_id, change_type, change_amount, current_savings, updated_at) VALUES (3, 1, 'RECURRING_BILL', -9000.00, 34200.00, TO_DATE('05-NOV-2026', 'DD-MON-YYYY'));
-INSERT INTO Savings_History (history_id, user_id, change_type, change_amount, current_savings, updated_at) VALUES (4, 1, 'INCOME', 12000.00, 46200.00, TO_DATE('05-NOV-2026', 'DD-MON-YYYY'));
-INSERT INTO Savings_History (history_id, user_id, change_type, change_amount, current_savings, updated_at) VALUES (5, 1, 'EXPENSE', -1450.00, 44750.00, TO_DATE('07-NOV-2026', 'DD-MON-YYYY'));
-INSERT INTO Savings_History (history_id, user_id, change_type, change_amount, current_savings, updated_at) VALUES (6, 2, 'INCOME', 60000.00, 60000.00, TO_DATE('02-NOV-2026', 'DD-MON-YYYY'));
-INSERT INTO Savings_History (history_id, user_id, change_type, change_amount, current_savings, updated_at) VALUES (7, 2, 'INCOME', 450.00, 60450.00, TO_DATE('04-NOV-2026', 'DD-MON-YYYY'));
-INSERT INTO Savings_History (history_id, user_id, change_type, change_amount, current_savings, updated_at) VALUES (8, 2, 'RECURRING_BILL', -18000.00, 42450.00, TO_DATE('05-NOV-2026', 'DD-MON-YYYY'));
-INSERT INTO Savings_History (history_id, user_id, change_type, change_amount, current_savings, updated_at) VALUES (9, 2, 'EXPENSE', -2200.00, 40250.00, TO_DATE('08-NOV-2026', 'DD-MON-YYYY'));
-INSERT INTO Savings_History (history_id, user_id, change_type, change_amount, current_savings, updated_at) VALUES (10, 3, 'INCOME', 38000.00, 38000.00, TO_DATE('03-NOV-2026', 'DD-MON-YYYY'));
-INSERT INTO Savings_History (history_id, user_id, change_type, change_amount, current_savings, updated_at) VALUES (11, 3, 'EXPENSE', -650.00, 37350.00, TO_DATE('06-NOV-2026', 'DD-MON-YYYY'));
-INSERT INTO Savings_History (history_id, user_id, change_type, change_amount, current_savings, updated_at) VALUES (12, 3, 'INCOME', 350.00, 37700.00, TO_DATE('07-NOV-2026', 'DD-MON-YYYY'));
-INSERT INTO Savings_History (history_id, user_id, change_type, change_amount, current_savings, updated_at) VALUES (13, 3, 'EXPENSE', -800.00, 36900.00, TO_DATE('09-NOV-2026', 'DD-MON-YYYY'));
-INSERT INTO Savings_History (history_id, user_id, change_type, change_amount, current_savings, updated_at) VALUES (14, 4, 'INCOME', 15000.00, 15000.00, TO_DATE('04-NOV-2026', 'DD-MON-YYYY'));
-INSERT INTO Savings_History (history_id, user_id, change_type, change_amount, current_savings, updated_at) VALUES (15, 4, 'EXPENSE', -3500.00, 11500.00, TO_DATE('07-NOV-2026', 'DD-MON-YYYY'));
-
--- ====================================================================
--- 7. INSERT INTO Recurring_Bills (10 rows)
+-- 6. INSERT INTO Recurring_Bills (10 rows)
 -- ====================================================================
 INSERT INTO Recurring_Bills (bill_id, user_id, category_id, title, amount, frequency, next_due_date, is_active) VALUES (301, 1, 2, 'House Rent', 9000.00, 'MONTHLY', TO_DATE('05-DEC-2026', 'DD-MON-YYYY'), 1);
 INSERT INTO Recurring_Bills (bill_id, user_id, category_id, title, amount, frequency, next_due_date, is_active) VALUES (302, 1, 3, 'Broadband Wi-Fi', 799.00, 'MONTHLY', TO_DATE('20-NOV-2026', 'DD-MON-YYYY'), 1);
