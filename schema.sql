@@ -79,98 +79,123 @@ CREATE TABLE Recurring_Bills (
 -- Triggers
 
 -- 1. Trigger to add record in Savings_History whenever Incomes gets an entry
-CREATE OR REPLACE TRIGGER trg_income_savings
-AFTER INSERT ON Incomes
-FOR EACH ROW
+CREATE OR REPLACE FUNCTION trg_income_savings_fn()
+RETURNS TRIGGER AS $$
 DECLARE
-    v_lock_id Users.user_id%TYPE;
-    v_prev    Savings_History.current_savings%TYPE;
+    v_lock_id users.user_id%TYPE;
+    v_prev    savings_history.current_savings%TYPE;
 BEGIN
     -- Lock the user's row so two simultaneous inserts can't read the same balance
     SELECT user_id INTO v_lock_id
-    FROM Users
-    WHERE user_id = :NEW.user_id
+    FROM users                                                                       
+    WHERE user_id = NEW.user_id
     FOR UPDATE;
- 
+                                           
     -- Latest balance for this user (0 if they have no history yet)
-    SELECT NVL(MAX(current_savings) KEEP (DENSE_RANK LAST ORDER BY history_id), 0)
-    INTO v_prev
-    FROM Savings_History
-    WHERE user_id = :NEW.user_id;
- 
-    INSERT INTO Savings_History (user_id, change_type, change_amount, current_savings)
-    VALUES (:NEW.user_id, 'INCOME', :NEW.amount, v_prev + :NEW.amount);
-END;
-/
+    SELECT COALESCE(
+        (SELECT current_savings
+         FROM savings_history                                                      
+         WHERE user_id = NEW.user_id
+         ORDER BY history_id DESC                                                                
+         LIMIT 1),                                    
+        0)                                                              
+    INTO v_prev;
+
+    INSERT INTO savings_history (user_id, change_type, change_amount, current_savings)
+    VALUES (NEW.user_id, 'INCOME', NEW.amount, v_prev + NEW.amount);
+                                                      
+    RETURN NEW;                                                                
+END;                                                                          
+$$ LANGUAGE plpgsql;
+                 
+CREATE TRIGGER trg_income_savings
+AFTER INSERT ON incomes
+FOR EACH ROW
+EXECUTE FUNCTION trg_income_savings_fn();
+
 
 -- 2. Trigger to add record in Savings_history whenever Expense table gets an entry
-CREATE OR REPLACE TRIGGER trg_expense_savings
-AFTER INSERT ON Expenses
-FOR EACH ROW
+CREATE OR REPLACE FUNCTION trg_expense_savings_fn()
+RETURNS TRIGGER AS $$
 DECLARE
-    v_lock_id Users.user_id%TYPE;
-    v_prev    Savings_History.current_savings%TYPE;
+    v_lock_id users.user_id%TYPE;
+    v_prev    savings_history.current_savings%TYPE;
 BEGIN
+    -- Lock the user's row so two simultaneous inserts can't read the same balance
     SELECT user_id INTO v_lock_id
-    FROM Users
-    WHERE user_id = :NEW.user_id
+    FROM users                                                                       
+    WHERE user_id = NEW.user_id
     FOR UPDATE;
- 
-    SELECT NVL(MAX(current_savings) KEEP (DENSE_RANK LAST ORDER BY history_id), 0)
-    INTO v_prev
-    FROM Savings_History
-    WHERE user_id = :NEW.user_id;
- 
-    INSERT INTO Savings_History (user_id, change_type, change_amount, current_savings)
-    VALUES (:NEW.user_id, 'EXPENSE', -:NEW.amount, v_prev - :NEW.amount);
-END;
-/
+                                           
+    -- Latest balance for this user (0 if they have no history yet)
+    SELECT COALESCE(
+        (SELECT current_savings
+         FROM savings_history                                                      
+         WHERE user_id = NEW.user_id
+         ORDER BY history_id DESC                                                                
+         LIMIT 1),                                    
+        0)                                                              
+    INTO v_prev;
+
+    INSERT INTO savings_history (user_id, change_type, change_amount, current_savings)
+    VALUES (NEW.user_id, 'EXPENSE', -NEW.amount, v_prev - NEW.amount);
+                                                      
+    RETURN NEW;                                                                
+END;                                                                          
+$$ LANGUAGE plpgsql;
+                 
+CREATE TRIGGER trg_expense_savings
+AFTER INSERT ON expenses
+FOR EACH ROW
+EXECUTE FUNCTION trg_expense_savings_fn();
+
 
 -- Procedure to make recurring payments and update the respective entries
-CREATE OR REPLACE PROCEDURE process_due_bills AS
+CREATE OR REPLACE PROCEDURE process_due_bills()
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    b     RECORD;
     v_due DATE;
 BEGIN
-    FOR b IN (
+    FOR b IN
         SELECT bill_id, user_id, category_id, title, amount, frequency, next_due_date
-        FROM Recurring_Bills
-        WHERE is_active = 1
-          AND next_due_date <= TRUNC(SYSDATE)
-    ) LOOP
+        FROM recurring_bills
+        WHERE is_active = TRUE
+          AND next_due_date <= CURRENT_DATE
+    LOOP
         v_due := b.next_due_date;
- 
+
         -- Loop so that missed periods (e.g. job was down for 3 days) are caught up
-        WHILE v_due <= TRUNC(SYSDATE) LOOP
-            INSERT INTO Expenses (user_id, category_id, title, description, amount, expense_date)
+        WHILE v_due <= CURRENT_DATE LOOP
+            INSERT INTO expenses (user_id, category_id, title, description, amount, expense_date)
             VALUES (b.user_id, b.category_id, b.title,
                     'Auto-generated from recurring bill #' || b.bill_id,
                     b.amount, v_due);
- 
+
             v_due := CASE b.frequency
                          WHEN 'DAILY'   THEN v_due + 1
                          WHEN 'WEEKLY'  THEN v_due + 7
-                         WHEN 'MONTHLY' THEN ADD_MONTHS(v_due, 1)
-                         WHEN 'YEARLY'  THEN ADD_MONTHS(v_due, 12)
+                         WHEN 'MONTHLY' THEN (v_due + INTERVAL '1 month')::date
+                         WHEN 'YEARLY'  THEN (v_due + INTERVAL '1 year')::date
                      END;
         END LOOP;
- 
-        UPDATE Recurring_Bills
+
+        UPDATE recurring_bills
         SET next_due_date = v_due
         WHERE bill_id = b.bill_id;
     END LOOP;
- 
+
     COMMIT;
-END process_due_bills;
-/
+END;
+$$;
 
 -- Runs everyday at 00:05:00
-BEGIN
-    DBMS_SCHEDULER.CREATE_JOB(
-        job_name        => 'JOB_PROCESS_DUE_BILLS',
-        job_type        => 'STORED_PROCEDURE',
-        job_action      => 'PROCESS_DUE_BILLS',
-        start_date      => SYSTIMESTAMP,
-        repeat_interval => 'FREQ=DAILY;BYHOUR=0;BYMINUTE=5;BYSECOND=0',
-        enabled         => TRUE
-    );
-END;
-/
+CREATE EXTENSION pg_cron;
+
+SELECT cron.schedule(
+    'job_process_due_bills',
+    '5 0 * * *',
+    'CALL process_due_bills()'
+);
+
